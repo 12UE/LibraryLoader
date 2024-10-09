@@ -495,11 +495,11 @@ namespace libraryloader {
 		PIMAGE_NT_HEADERS m_pNtHeader;
 		PIMAGE_SECTION_HEADER m_pSectionHeader;
 		void* m_VirtualAddress;
-		INLINE unsigned int GetAlignedSize(unsigned int iOriginalData, unsigned int Alignment) //iOriginalData原始数据 iAlignment对齐边界
+		INLINE unsigned int GetAlignedSize(unsigned int OriginalData, unsigned int Alignment) //iOriginalData原始数据 iAlignment对齐边界
 		{
-			//iAlignment必须是2的幂
+			//Alignment必须是2的幂
 			if (Alignment & (Alignment - 1)) return -1;
-			return (iOriginalData + Alignment - 1) & ~(Alignment - 1);
+			return (OriginalData + Alignment - 1) & ~(Alignment - 1);
 		}
 	public:
 		MemoryPE(std::string _fileName, LPVOID _fileImage, DWORD _fileSize) :fileName(_fileName), fileImage(_fileImage), fileSize(_fileSize) {
