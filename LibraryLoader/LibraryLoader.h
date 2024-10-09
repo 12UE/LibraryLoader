@@ -30,7 +30,6 @@
 #include<thread>
 #include<stack>
 #include <Dbghelp.h>
-#include"CPeFile.h"
 #pragma comment(lib,"Dbghelp.lib")
 
 typedef struct _PEB_LDR_DATA_64 {

@@ -129,11 +129,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CPeFile.cpp" />
     <ClCompile Include="LibraryLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CPeFile.h" />
     <ClInclude Include="LibraryLoader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
