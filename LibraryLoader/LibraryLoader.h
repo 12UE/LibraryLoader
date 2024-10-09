@@ -495,7 +495,7 @@ namespace libraryloader {
 		PIMAGE_NT_HEADERS m_pNtHeader;
 		PIMAGE_SECTION_HEADER m_pSectionHeader;
 		void* m_VirtualAddress;
-		INLINE unsigned int GetAlignedSize(unsigned int OriginalData, unsigned int Alignment) //iOriginalData原始数据 iAlignment对齐边界
+		INLINE unsigned int GetAlignedSize(unsigned int OriginalData, unsigned int Alignment) //OriginalData原始数据 Alignment对齐边界
 		{
 			//Alignment必须是2的幂
 			if (Alignment & (Alignment - 1)) return -1;
