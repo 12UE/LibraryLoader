@@ -716,8 +716,6 @@ namespace libraryloader {
 		INLINE bool FixExceptionTable() {
 			AUTOLOG
 			if (!CheckHeader(IMAGE_DIRECTORY_ENTRY_EXCEPTION)) return true;//如果没有一场表就不做后续处理
-			
-
 		}
 		INLINE bool FixRelocationTable(){
 			AUTOLOG
@@ -852,7 +850,6 @@ namespace libraryloader {
 			AUTOLOG
 			return (HMODULE)m_VirtualAddress;
 		}
-		
 	};
 	HMODULE LoadExcuteMemory(const std::string& filename, LPVOID fileImage,DWORD filesize) {
 		AUTOLOG
@@ -869,7 +866,6 @@ namespace libraryloader {
 		if (wideStr.empty()) {
 			return std::string();
 		}
-
 		int size_needed = WideCharToMultiByte(CP_UTF8, 0, wideStr.c_str(), (int)wideStr.size(), NULL, 0, NULL, NULL);
 		std::string str(size_needed, 0);
 		WideCharToMultiByte(CP_UTF8, 0, wideStr.c_str(), (int)wideStr.size(), &str[0], size_needed, NULL, NULL);

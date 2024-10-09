@@ -14,7 +14,7 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
 
-    libraryloader::LibraryLoadA("MFCDLL.dll");
+    libraryloader::LibraryLoadA("DllTest.dll");
     system("pause");
     return 0;
 }
