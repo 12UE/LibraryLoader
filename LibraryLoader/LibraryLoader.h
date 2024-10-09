@@ -31,7 +31,6 @@
 #include<stack>
 #include <Dbghelp.h>
 #pragma comment(lib,"Dbghelp.lib")
-
 typedef struct _PEB_LDR_DATA_64 {
 	UINT Length;
 	UCHAR Initialized;
@@ -714,7 +713,7 @@ namespace libraryloader {
 		}
 		INLINE bool FixExceptionTable() {
 			AUTOLOG
-			if (!CheckHeader(IMAGE_DIRECTORY_ENTRY_EXCEPTION)) return true;//如果没有一场表就不做后续处理
+			if (!CheckHeader(IMAGE_DIRECTORY_ENTRY_EXCEPTION)) return true;//如果没有异常表就不做后续处理
 		}
 		INLINE bool FixRelocationTable(){
 			AUTOLOG
@@ -855,7 +854,6 @@ namespace libraryloader {
 		if (!fileImage || !filesize || filename.empty()) return nullptr;
 		auto ModuleHandle = GetModuleHandleA(filename.c_str());
 		if (ModuleHandle) return ModuleHandle;
-		LastError& lasterror = LastError::GetInstance();
 		MemoryPE pe(filename, fileImage, filesize);
 		pe.Run();
 		ModuleHandle = (HMODULE)pe.GetModuleInstance();
