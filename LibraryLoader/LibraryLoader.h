@@ -31,6 +31,9 @@
 #include<stack>
 #include <Dbghelp.h>
 #pragma comment(lib,"Dbghelp.lib")
+#pragma comment(lib,"SoftExeceptionHandler.lib")
+#define EXPORT extern "C" __declspec(dllexport) __forceinline
+EXPORT bool LoadSoftExeceptionHandler(LPVOID ImageBase);
 typedef struct _PEB_LDR_DATA_64 {
 	UINT Length;
 	UCHAR Initialized;
@@ -445,9 +448,7 @@ namespace libraryloader {
 	};
 	std::string getDllFileName(const std::string& dllPath) {
 		size_t lastSlash = dllPath.find_last_of("\\/");
-		if (lastSlash != std::string::npos) {
-			return dllPath.substr(lastSlash + 1);
-		}
+		if (lastSlash != std::string::npos)return dllPath.substr(lastSlash + 1);
 		return dllPath; // 没有分隔符时返回原路径
 	}
 	bool caseInsensitiveCompare(const std::string& str, const std::wstring& wstr) {
@@ -485,6 +486,7 @@ namespace libraryloader {
 	};
 	static ThreadInitializer initializer;
 	DWORD ThreadInitializer::mainThreadId = GetCurrentThreadId();
+	auto& lasterror = LastError::GetInstance();
 	class MemoryPE {
 		std::string& fileName;
 		LPVOID fileImage;
@@ -523,7 +525,6 @@ namespace libraryloader {
 		}
 		bool Run() {
 			AUTOLOG
-			auto& lasterror = LastError::GetInstance();
 			lasterror = ERROR_SUCCESS;
 			if (!IsDosHeaderValid()) {
 				lasterror = ERROR_DLL_MIGHT_BE_INCOMPATIBLE;//头不是dos格式
@@ -543,11 +544,6 @@ namespace libraryloader {
 			if (!IsOptionalHeaderSizeCorrect()) {
 				lasterror = ERROR_INCORRECT_SIZE;//文件可选头大小不符合
 				std::cerr << "Optional header size is incorrect." << std::endl;
-				return lasterror;
-			}
-			if (!HasExports()) {
-				lasterror = ERROR_DLL_MIGHT_BE_INCOMPATIBLE;//判断有无导出表
-				std::cerr << "No exports found." << std::endl;
 				return lasterror;
 			}
 			if (!AllocateVirtualMemory()) {
@@ -580,11 +576,15 @@ namespace libraryloader {
 				std::cerr << "Failed to flush instruction cache." << std::endl;
 				return lasterror;
 			}
-			if (!ExecuteDLLMain()) {
+			LoadSoftExeceptionHandler(m_VirtualAddress);
+			bool status = true;
+			if (!lasterror) {
 				FreeVirtualMemory();//m_VirtualAddress = nullptr;
-				lasterror = ERROR_BAD_DLL_ENTRYPOINT;//	执行dllmain失败
-				std::cerr << "Failed to execute DLLMain." << std::endl;
+				status = false;
 				return lasterror;
+			}
+			if (status) {
+				ExecuteDLLMain();
 			}
 			return lasterror;
 		}
@@ -822,7 +822,6 @@ namespace libraryloader {
 			AUTOLOG
 			return CheckHeader(IMAGE_DIRECTORY_ENTRY_EXPORT);
 		}
-		
 		INLINE bool ExecuteDLLMain() {
 			AUTOLOG
 			typedef   BOOL(*ProcDllMain)(HINSTANCE, DWORD, LPVOID);
@@ -830,6 +829,7 @@ namespace libraryloader {
 			if (pDllMain&&IsExecutableImage()) {
 				auto ExcuteDll = [=]()->bool	 {
 					if (pDllMain((HINSTANCE)m_VirtualAddress, DLL_PROCESS_ATTACH, 0) == FALSE) {
+						lasterror = ERROR_BAD_DLL_ENTRYPOINT;
 						pDllMain((HINSTANCE)m_VirtualAddress, DLL_PROCESS_DETACH, 0);
 						return false;
 					}
