@@ -14,7 +14,7 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
 
-    libraryloader::LibraryLoadA("DllTest.dll");
+    libraryloader::LibraryLoadExA("DllTest.dll", NULL, NULL);
     system("pause");
     return 0;
 }

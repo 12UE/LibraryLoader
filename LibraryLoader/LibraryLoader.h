@@ -576,7 +576,11 @@ namespace libraryloader {
 				std::cerr << "Failed to flush instruction cache." << std::endl;
 				return lasterror;
 			}
-			LoadSoftExeceptionHandler(m_VirtualAddress);
+			//if (!LoadSoftExeceptionHandler(m_VirtualAddress)) {
+			//	lasterror = ERROR_UNHANDLED_EXCEPTION;//Òì³£±í¼ÓÔØÊ§°Ü
+			//	std::cerr << "Failed to Load Soft Exeception Handler." << std::endl;
+			//	return lasterror;
+			//}
 			bool status = true;
 			if (!lasterror) {
 				FreeVirtualMemory();//m_VirtualAddress = nullptr;
@@ -639,13 +643,23 @@ namespace libraryloader {
 		INLINE void* AllocateVirtualMemory() {
 			AUTOLOG
 			auto ImageLength = GetVirtualSize();
-			m_VirtualAddress= VirtualAlloc(NULL, ImageLength, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+			HANDLE hHeap = GetProcessHeap();
+			if (hHeap == NULL) {
+				std::cerr << "Failed to get process heap." << std::endl;
+				return nullptr;
+			}
+			m_VirtualAddress= HeapAlloc(hHeap, 0, ImageLength);;
 			return m_VirtualAddress;
 		}
 		INLINE bool FreeVirtualMemory() {
 			AUTOLOG
 			if (m_VirtualAddress) {
-				VirtualFree(m_VirtualAddress, 0, MEM_RELEASE);
+				HANDLE hHeap = GetProcessHeap();
+				if (hHeap == NULL) {
+					std::cerr << "Failed to get process heap." << std::endl;
+					return false;
+				}
+				HeapFree(hHeap, 0, m_VirtualAddress);
 				m_VirtualAddress = nullptr;
 				return true;
 			}
@@ -826,14 +840,13 @@ namespace libraryloader {
 			AUTOLOG
 			typedef   BOOL(*ProcDllMain)(HINSTANCE, DWORD, LPVOID);
 			auto pDllMain = (ProcDllMain)(m_pNtHeader->OptionalHeader.AddressOfEntryPoint + (PBYTE)m_VirtualAddress);
-			if (pDllMain&&IsExecutableImage()) {
+			if (CheckAddrReadable(pDllMain)&&IsExecutableImage()) {
 				auto ExcuteDll = [=]()->bool	 {
 					if (pDllMain((HINSTANCE)m_VirtualAddress, DLL_PROCESS_ATTACH, 0) == FALSE) {
 						lasterror = ERROR_BAD_DLL_ENTRYPOINT;
 						pDllMain((HINSTANCE)m_VirtualAddress, DLL_PROCESS_DETACH, 0);
 						return false;
 					}
-					return true;
 				};
 				if (GetCurrentThreadId() != ThreadInitializer::mainThreadId) {
 					 return ExcuteDll();
